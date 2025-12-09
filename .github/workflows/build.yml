@@ -66,9 +66,10 @@ jobs:
           if [ -z "$TAG" ]; then
             TAG="latest"
           fi
-          # Build multi-arch image
+          IMAGE_NAME="${{ secrets.DOCKER_USERNAME }}/saas-platform_${{ github.event.inputs.service }}"
           docker buildx build \
             --platform linux/arm64 \
-            -t ${{ secrets.DOCKER_USERNAME }}/${{ github.event.inputs.service }}:$TAG \
-            -t ${{ secrets.DOCKER_USERNAME }}/${{ github.event.inputs.service }}:latest \
+            -t $IMAGE_NAME:$TAG \
+            -t $IMAGE_NAME:latest \
             --push .
+      

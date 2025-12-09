@@ -1,5 +1,5 @@
 # Use Eclipse Temurin JDK 21 base image
-FROM eclipse-temurin:21-jdk-jammy
+FROM gcr.io/distroless/java:21
 
 # Set working directory inside container
 WORKDIR /app
