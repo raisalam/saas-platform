@@ -20,12 +20,6 @@ public class RegisterRequest {
     @Email(message = "Invalid email format")
     @Size(max = 120, message = "Email cannot exceed 120 characters")
     private String email;
-
-    @NotBlank(message = "Phone number is required")
-    @Pattern(
-            regexp = "^[0-9]{8,15}$",
-            message = "Phone must be numeric and between 8–15 digits"
-    )
     private String phone;
 
     @NotBlank(message = "Password is required")

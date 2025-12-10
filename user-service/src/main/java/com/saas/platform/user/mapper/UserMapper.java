@@ -18,6 +18,10 @@ public interface UserMapper {
     @Mapping(target = "password", ignore = true)   // set manually after hashing
     @Mapping(target = "balance", constant = "0.0")
     @Mapping(target = "total", constant = "0.0")
+    @Mapping(target = "fullName")
+    @Mapping(target = "email")
+
+
     User toEntity(RegisterRequest dto);
 
     // User → UserResponse (for API responses)

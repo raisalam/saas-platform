@@ -1,11 +1,13 @@
 package com.saas.platform.user.service;
 
+import com.saas.platform.common.events.DomainEventPublisher;
 import com.saas.platform.common.jwt.JwtService;
 import com.saas.platform.common.kafka.KafkaPublisher;
-import com.saas.platform.common.kafka.seller.SellerLogin;
 import com.saas.platform.common.mqtt.MqttService;
 import com.saas.platform.common.redis.RedisService;
 import com.saas.platform.db.TenantContext;
+import com.saas.platform.user.domain.event.user.UserLoggedInEvent;
+import com.saas.platform.user.domain.event.user.UserRegisteredEvent;
 import com.saas.platform.user.dto.LoginRequest;
 import com.saas.platform.user.dto.RegisterRequest;
 import com.saas.platform.user.dto.TokenResponse;
@@ -31,10 +33,9 @@ public class UserService {
     private final UserRepository repo;
     private final RoleRepository roleRepo;
     private final JwtService jwtService;
-    private final MqttService mqttService;
-    private final RedisService redisService;
-    private final KafkaPublisher kafkaPublisher;
     private final UserMapper mapper;
+    private final DomainEventPublisher eventPublisher;
+
 
     public User register(RegisterRequest dto) {
 
@@ -57,8 +58,24 @@ public class UserService {
         // Set default role
         user.setRole(sellerRole);
 
+
         // Save
-        return repo.save(user);
+         user =  repo.save(user);
+        UserRegisteredEvent event = UserRegisteredEvent.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .role(sellerRole.getName())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .deviceId(user.getDeviceId())
+                .androidId(user.getAndroidId())
+                .build();
+
+        // 🔥 publish once → all enabled handlers will run automatically
+        eventPublisher.publish(event);
+
+
+        return user;
     }
 
     public TokenResponse login(LoginRequest dto) {
@@ -76,6 +93,7 @@ public class UserService {
         if (!dto.getAndroidId().equals(user.getAndroidId()) || !dto.getDeviceId().equals(user.getDeviceId())) {
             throw new IllegalArgumentException("Device not recognized");
         }
+        /**
 
         Double balance = user.getBalance();
         mqttService.publishAsync( "user/" + user.getId(), balance.toString());
@@ -86,6 +104,17 @@ public class UserService {
                 "IpAddress",
                 "UserAgent",
                 Instant.now()));
+         **/
+
+        UserLoggedInEvent event = UserLoggedInEvent.builder()
+                .userId(user.getId())
+                .balance(user.getBalance())
+                .androidId(user.getAndroidId())
+                .build();
+
+        // 🔥 publish once → all enabled handlers will run automatically
+        eventPublisher.publish(event);
+
         String accessToken = generateUserToken( user);
         // Generate refresh token
         System.out.printf(accessToken);
