@@ -7,6 +7,10 @@ WORKDIR /app
 # Copy the Spring Boot JAR (built by Gradle)
 COPY build/libs/*.jar app.jar
 
+ENV KAFKA_OPTS=""
+ENV JAVA_TOOL_OPTIONS=""
+ENV JAVA_OPTS=""
+
 # Expose the port your app runs on
 EXPOSE 8080
 
