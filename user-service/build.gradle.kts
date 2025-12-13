@@ -31,6 +31,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.mapstruct:mapstruct:1.5.5.Final")
     implementation("jakarta.validation:jakarta.validation-api:3.1.0")
+    implementation("org.springframework.kafka:spring-kafka")
+
 
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
     annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
@@ -43,7 +45,7 @@ dependencies {
     //implementation("com.saas.platform:saas-db:1.0.1")
     //implementation("com.saas.platform:saas-common:1.0.2")
       implementation("com.saas.platform:saas-db:1.0.1")
-      implementation("com.saas.platform:saas-common:1.0.6")
+      implementation("com.saas.platform:saas-common:1.0.7")
 
     implementation("com.mysql:mysql-connector-j")
 }
