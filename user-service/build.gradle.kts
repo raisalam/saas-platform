@@ -4,7 +4,7 @@ plugins {
     java
 }
 
-group = "com.saas.platform.catalog"
+group = "com.saas.platform.user"
 version = "1.0.0"
 
 java {
@@ -40,7 +40,7 @@ dependencies {
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     // Use saas-platfor library
-   // implementation("com.saas.platform:saas-db:1.0.1")
+    //implementation("com.saas.platform:saas-db:1.0.1")
     //implementation("com.saas.platform:saas-common:1.0.2")
       implementation("com.saas.platform:saas-db:latest.release")
       implementation("com.saas.platform:saas-common:latest.release")
