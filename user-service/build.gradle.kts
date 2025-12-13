@@ -42,7 +42,7 @@ dependencies {
     // Use saas-platfor library
     //implementation("com.saas.platform:saas-db:1.0.1")
     //implementation("com.saas.platform:saas-common:1.0.2")
-      implementation("com.saas.platform:saas-db:latest.release")
+      implementation("com.saas.platform:saas-db:common:1.0.4")
       implementation("com.saas.platform:saas-common:latest.release")
 
     implementation("com.mysql:mysql-connector-j")
