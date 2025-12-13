@@ -13,6 +13,11 @@ import static com.saas.platform.gateway.functions.CorrelationBeforeFilterFunctio
 @Configuration
 class RouteConfiguration {
 
+    private final GatewayRouteProperties props;
+
+    RouteConfiguration(GatewayRouteProperties props) {
+        this.props = props;
+    }
     @Bean
     public RouterFunction<ServerResponse> instrumentRoute() {
 
@@ -21,7 +26,7 @@ class RouteConfiguration {
                         builder
                                 .filter(authenticate())
                                 .before(instrument())
-                                .before(uri("http://localhost:8081"))
+                                .before(uri(props.getUserServiceUrl()))
                                 .route(req -> true, http())
                 )
                 .build();
@@ -31,7 +36,7 @@ class RouteConfiguration {
                         builder
                                 .filter(authenticate())
                                 .before(instrument())
-                                .before(uri("http://localhost:8082"))
+                                .before(uri(props.getCatalogServiceUrl()))
                                 .route(req -> true, http())
                 )
                 .build();
