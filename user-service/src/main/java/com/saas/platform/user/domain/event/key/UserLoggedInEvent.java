@@ -1,4 +1,4 @@
-package com.saas.platform.user.domain.event.user;
+package com.saas.platform.user.domain.event.key;
 
 import com.saas.platform.common.events.DomainEvent;
 import lombok.*;
@@ -15,6 +15,7 @@ import java.util.Map;
 @NoArgsConstructor
 @Builder
 public class UserLoggedInEvent implements DomainEvent {
+    private String tenantId;
     private  Long userId;
     private  String email;
     private  String name;
@@ -23,6 +24,10 @@ public class UserLoggedInEvent implements DomainEvent {
     private  String ip;
     private  Instant timestamp;
     private  Double balance;
+    private  Double total;
+    private  String role;
+    private String correlationId;
+    private  boolean active;
     private  Map<String, Object> meta;
 
 }

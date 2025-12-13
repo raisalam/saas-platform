@@ -1,0 +1,48 @@
+spring:
+  data:
+    redis:
+      host: 84.8.155.173
+      port: 6379
+      password: Jhimi@786#29(D$w  # <--- ADD THIS LINE
+      database: 0              # optional, default 0
+      timeout: 2000ms          # optional
+      lettuce: # if using Lettuce (default)
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+  datasource:
+    master:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbcUrl: jdbc:mysql://localhost:3306/master_tenant_db?useSSL=false&serverTimezone=UTC
+      username: root
+      password: root
+      maximumPoolSize: 10
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+saas:
+  common:
+    jwt:
+      enabled: true
+      secret: 4d0e47912ec2f5313b35510b75630f95edcd45afee883427af7b83c0696c2170ec074a4a17b74ed2dae0a817eb8aa884759706a280d736e80ce696103fe55756
+      access-token-expiration-ms: 3600000    # 1 hour
+      refresh-token-expiration-ms: 604800000 # 1 week
+    redis:
+      enabled: true
+    kafka:
+      enabled: true
+      bootstrap-servers: 129.154.229.196:9092
+    mqtt:
+      enabled: true
+      broker: tcp://140.245.12.251:1883
+      username: admin    # 1 hour
+      password: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInNlbGxlcklkIjo5OTk5LCJyb2xlIjoidGVzdCIsInVzZXJuYW1lIjoiYWRtaW4iLCJhY2wiOlt7InBlcm1pc3Npb24iOiJhbGxvdyIsImFjdGlvbiI6ImFsbCIsInRvcGljIjoiIyJ9XSwiaWF0IjoxNzY0OTUwNDU5LCJleHAiOjE3OTY0ODY0NTl9.XdSV3Jf4u8gvxcON4tqdC1xAj_oAjchh8rEGHf1IB4A # 1 week
+logging:
+  level:
+    com.saas.platform.common: DEBUG

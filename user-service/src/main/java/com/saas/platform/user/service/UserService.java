@@ -2,25 +2,24 @@ package com.saas.platform.user.service;
 
 import com.saas.platform.common.events.DomainEventPublisher;
 import com.saas.platform.common.jwt.JwtService;
-import com.saas.platform.common.kafka.KafkaPublisher;
-import com.saas.platform.common.mqtt.MqttService;
-import com.saas.platform.common.redis.RedisService;
 import com.saas.platform.db.TenantContext;
-import com.saas.platform.user.domain.event.user.UserLoggedInEvent;
-import com.saas.platform.user.domain.event.user.UserRegisteredEvent;
+import com.saas.platform.user.domain.event.key.BalanceUpdatedEvent;
+import com.saas.platform.user.domain.event.key.UserLoggedInEvent;
+import com.saas.platform.user.domain.event.key.UserRegisteredEvent;
 import com.saas.platform.user.dto.LoginRequest;
 import com.saas.platform.user.dto.RegisterRequest;
 import com.saas.platform.user.dto.TokenResponse;
 import com.saas.platform.user.dto.UserResponse;
 import com.saas.platform.user.entity.Role;
 import com.saas.platform.user.entity.User;
+import com.saas.platform.user.entity.UserAttribute;
 import com.saas.platform.user.mapper.UserMapper;
 import com.saas.platform.user.repository.RoleRepository;
 import com.saas.platform.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +36,7 @@ public class UserService {
     private final DomainEventPublisher eventPublisher;
 
 
-    public User register(RegisterRequest dto) {
+    public UserResponse register(RegisterRequest dto) {
 
         if (repo.existsByUsername(dto.getUsername())) {
             throw new IllegalArgumentException("Username already taken: " + dto.getUsername());
@@ -75,13 +74,13 @@ public class UserService {
         eventPublisher.publish(event);
 
 
-        return user;
+        return mapper.toResponse(user);
     }
 
     public TokenResponse login(LoginRequest dto) {
         // Find user by username or email
-        User user = repo.findByUsername(dto.getUsernameOrEmail())
-                .or(() -> repo.findByEmail(dto.getUsernameOrEmail()))
+        User user = repo.findByUsername(dto.getEmail())
+                .or(() -> repo.findByEmail(dto.getEmail()))
                 .orElseThrow(() -> new IllegalArgumentException("Invalid username/email or password"));
 
         // Verify password (use encoder if hashed)
@@ -90,51 +89,49 @@ public class UserService {
         }
 
         // Verify device
-        if (!dto.getAndroidId().equals(user.getAndroidId()) || !dto.getDeviceId().equals(user.getDeviceId())) {
-            throw new IllegalArgumentException("Device not recognized");
+        if (!dto.getAndroidId().equals(user.getAndroidId())) {
+            throw new IllegalArgumentException("Android not recognized");
         }
-        /**
-
-        Double balance = user.getBalance();
-        mqttService.publishAsync( "user/" + user.getId(), balance.toString());
-        redisService.setAsync("user/" + user.getId(), balance.toString());
-        kafkaPublisher.publishAsync(new SellerLogin(
-                user.getId(),
-                user.getDeviceId(),
-                "IpAddress",
-                "UserAgent",
-                Instant.now()));
-         **/
-
         UserLoggedInEvent event = UserLoggedInEvent.builder()
+                .tenantId(TenantContext.getTenantId())
                 .userId(user.getId())
+                .total(user.getTotal())
+                .role(user.getRole().getName())
                 .balance(user.getBalance())
                 .androidId(user.getAndroidId())
+                .active(user.isActive())
                 .build();
 
         // 🔥 publish once → all enabled handlers will run automatically
         eventPublisher.publish(event);
 
-        String accessToken = generateUserToken( user);
+        String token = generateUserToken( user);
         // Generate refresh token
-        System.out.printf(accessToken);
+        System.out.printf(token);
         String refreshToken = jwtService.generateRefreshToken(user.getUsername());
 
         // Save refresh token to user
         user.setRefreshToken(refreshToken);
-        repo.save(user);
-
-
         return new TokenResponse(
-                accessToken,
+                user.getId(),
+                token,
                 refreshToken,
                 user.getFullName(),
-                user.getRole().getName()
+                user.getRole().getName(),
+                getAvatar(user)
         );
     }
 
+    @Transactional(value = "transactionManager") // 👈 Specify the bean name
     public UserResponse getProfile(String username) {
         return repo.findByUsername(username)
+                .map(mapper::toResponse)
+                .orElseThrow();
+    }
+
+    @Transactional(value = "transactionManager") // 👈 Specify the bean name
+    public UserResponse getProfile(Long userId) {
+        return repo.findById(userId)
                 .map(mapper::toResponse)
                 .orElseThrow();
     }
@@ -174,10 +171,12 @@ public class UserService {
         repo.save(user);
 
         return new TokenResponse(
+                user.getId(),
                 "newAccessToken",
                 "newRefreshToken",
                 user.getUsername(),
-                user.getRole().getName()
+                user.getRole().getName(),
+                getAvatar(user)
         );
     }
 
@@ -187,6 +186,7 @@ public class UserService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("sub", subject);
         claims.put("sellerId", user.getId());
+        claims.put("tenantId", tenantId);
         claims.put("role", user.getRole().getName());
         // --- ACL: subscribe-only ---
         List<Map<String, Object>> acl = List.of(
@@ -200,7 +200,7 @@ public class UserService {
                 Map.of(
                         "permission", "allow",
                         "action", "subscribe",
-                        "topic", "tenant/" + tenantId + "/public/notification"
+                        "topic", "tenant/" + tenantId + "/public/#"
                 ),
                 // Allow subscribe to user's own events
                 Map.of(
@@ -220,4 +220,26 @@ public class UserService {
         return jwtService.generateAccessToken(subject, claims);
     }
 
+    public String getAvatar(User user) {
+        return user.getAttributes()
+                .stream()
+                .filter(attr -> "avatar".equals(attr.getKey()))
+                .map(UserAttribute::getValue)
+                .findFirst()
+                .orElse("https://res.cloudinary.com/dfcy1i11m/image/upload/v1763439718/avatars/avatar_1.jpg");
+    }
+
+
+    @Transactional(value = "transactionManager") // 👈 Specify the bean name
+    public UserResponse updateBalance(Long userId,  Double totalCost) {
+        User user  = repo.findById(userId).orElseThrow(()->new RuntimeException("User not found"));
+        System.out.println("User current balance === "+user.getBalance());
+        System.out.println("Total cost is "+totalCost);
+        user.setBalance(user.getBalance() - totalCost);
+        System.out.println("Final user gabalnce = "+user.getBalance());
+        return mapper.toResponse(user);
+    }
+
+    public void deductBalance(String tenantId, Long userId, Double totalCost, String correlationId) {
+    }
 }

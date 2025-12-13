@@ -2,11 +2,14 @@ package com.saas.platform.user.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
 public class RegisterRequest {
 
     @NotBlank(message = "Username is required")
@@ -30,8 +33,7 @@ public class RegisterRequest {
     @Size(max = 100, message = "Android ID cannot exceed 100 characters")
     private String androidId;
 
-    @NotBlank(message = "Device ID is required")
-    @Size(max = 100, message = "Device ID cannot exceed 100 characters")
-    private String deviceId;
+    private DeviceInfoDto deviceInfo;
+    private MetadataDto metadata;
 
 }

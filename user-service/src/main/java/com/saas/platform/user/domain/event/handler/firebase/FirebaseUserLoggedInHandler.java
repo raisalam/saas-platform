@@ -2,10 +2,9 @@ package com.saas.platform.user.domain.event.handler.firebase;
 
 import com.saas.platform.common.events.DomainEventHandler;
 import com.saas.platform.common.firebase.FirebaseService;
-import com.saas.platform.user.domain.event.user.UserLoggedInEvent;
+import com.saas.platform.user.domain.event.key.UserLoggedInEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;

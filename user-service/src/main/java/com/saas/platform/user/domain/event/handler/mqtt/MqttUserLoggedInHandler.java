@@ -2,10 +2,9 @@ package com.saas.platform.user.domain.event.handler.mqtt;
 
 import com.saas.platform.common.events.DomainEventHandler;
 import com.saas.platform.common.mqtt.MqttService;
-import com.saas.platform.user.domain.event.user.UserLoggedInEvent;
+import com.saas.platform.user.domain.event.key.UserLoggedInEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -27,6 +26,16 @@ public class MqttUserLoggedInHandler implements DomainEventHandler<UserLoggedInE
     @Override
     public void handle(UserLoggedInEvent user) {
         log.debug("MqttUserLoggedInHandler :: handle :: {} - {} - {}", user.getUserId(), user.getBalance(), user.getAndroidId());
-        mqttService.publishAsync( "user/" + user.getUserId(), user.getBalance().toString());
+
+        String message = String.format("""
+        {
+          "type": "BalanceUpdated",
+          "balance": %s
+        }
+        """,
+                user.getBalance().toString()
+        );
+
+        mqttService.publishAsync( "user/" + user.getUserId()+"/events", message, 1, true);
     }
 }

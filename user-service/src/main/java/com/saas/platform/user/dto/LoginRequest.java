@@ -1,13 +1,17 @@
 package com.saas.platform.user.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
 public class LoginRequest {
 
     @NotBlank(message = "Username or Email is required")
-    private String usernameOrEmail;
+    private String email;
 
     @NotBlank(message = "Password is required")
     private String password;
@@ -15,6 +19,6 @@ public class LoginRequest {
     @NotBlank(message = "Android ID is required")
     private String androidId;
 
-    @NotBlank(message = "Android ID is required")
-    private String deviceId;
+    private DeviceInfoDto deviceInfo;
+    private MetadataDto metadata;
 }

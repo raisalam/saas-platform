@@ -6,7 +6,12 @@ on:
       service:
         description: 'Service name to build (folder name)'
         required: true
+        type: choice
         default: 'user-service'
+        options:
+          - api-gateway
+          - user-service
+          - catalog-service
       tag:
         description: 'Optional tag for Docker image'
         required: true

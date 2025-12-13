@@ -1,16 +1,21 @@
+server:
+  port: 8081
+
 spring:
   data:
     redis:
+
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}   # <--- ADD THIS LINE
       database: 0              # optional, default 0
-      timeout: 2000ms          # optional
+      timeout: 5s          # optional
       lettuce: # if using Lettuce (default)
         pool:
           max-active: 8
           max-idle: 8
           min-idle: 0
+          read-timeout: 5s
   datasource:
     master:
       driver-class-name: com.mysql.cj.jdbc.Driver
@@ -38,11 +43,14 @@ saas:
     kafka:
       enabled: ${KAFKA_ENABLED:false}
       bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+      group: user-microservice-group
     mqtt:
       enabled: ${MQTT_ENABLED:false}
       broker: ${MQTT_BROKER:tcp://localhost:8083}
       username: ${MQTT_USERNAME:username}    # 1 hour
       password: ${MQTT_PASSWORD:default_password}
+      clientId: ${MQTT_GROUP:user}
+
 logging:
   level:
     com.saas.platform: ${LOG_LEVEL:DEBUG}

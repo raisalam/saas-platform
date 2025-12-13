@@ -1,9 +1,8 @@
 package com.saas.platform.user.domain.event.handler.webhook;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.saas.platform.common.events.DomainEventHandler;
-import com.saas.platform.user.domain.event.user.UserLoggedInEvent;
+import com.saas.platform.user.domain.event.key.UserLoggedInEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;

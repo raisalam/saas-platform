@@ -1,7 +1,6 @@
-package com.saas.platform.user.domain.event.user;
+package com.saas.platform.user.domain.event.key;
 
 import com.saas.platform.common.events.DomainEvent;
-import com.saas.platform.user.entity.User;
 import lombok.*;
 
 import java.time.Instant;
