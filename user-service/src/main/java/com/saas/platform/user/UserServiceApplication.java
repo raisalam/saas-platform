@@ -1,5 +1,6 @@
 package com.saas.platform.user;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
@@ -22,4 +23,14 @@ public class UserServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(UserServiceApplication.class, args);
     }
+    @PostConstruct
+    public void dumpJvmProps() {
+        System.getProperties().forEach((k, v) -> {
+            if (k.toString().toLowerCase().contains("kafka") ||
+                    k.toString().toLowerCase().contains("sasl")) {
+                System.out.println(k + "=" + v);
+            }
+        });
+    }
+
 }
