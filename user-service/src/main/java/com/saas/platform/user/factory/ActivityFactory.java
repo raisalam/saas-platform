@@ -14,7 +14,7 @@ public class ActivityFactory {
             Double amount,
             Double balance
     ) {
-        return UserActivity.builder()
+        UserActivity userActivity =  UserActivity.builder()
                 .userId(userId)
                 .activityType(ActivityType.KEY_GENERATED)
                 .title("Keys Generated")
@@ -27,6 +27,11 @@ public class ActivityFactory {
                 .correlationId(MDC.get("traceId"))
                 .createdAt(LocalDateTime.now())
                 .build();
+        System.out.println("=================building user logs=========");
+        System.out.println(userActivity);
+        System.out.println("============================================");
+
+        return userActivity;
     }
 
     public static UserActivity keyUsed(
@@ -34,7 +39,7 @@ public class ActivityFactory {
             String game,
             Double balance
     ) {
-        return UserActivity.builder()
+        UserActivity userActivity = UserActivity.builder()
                 .userId(userId)
                 .activityType(ActivityType.KEY_USED)
                 .title("Key Used")
@@ -43,6 +48,12 @@ public class ActivityFactory {
                 .balanceAfter(balance)
                 .createdAt(LocalDateTime.now())
                 .build();
+
+        System.out.println("=================building user logs=========");
+        System.out.println(userActivity);
+        System.out.println("============================================");
+
+        return userActivity;
     }
 
     public static UserActivity balanceReceived(
@@ -50,7 +61,7 @@ public class ActivityFactory {
             Double amount,
             Double balance
     ) {
-        return UserActivity.builder()
+        UserActivity userActivity = UserActivity.builder()
                 .userId(userId)
                 .activityType(ActivityType.BALANCE_RECEIVED)
                 .title("Balance Received")
@@ -59,6 +70,11 @@ public class ActivityFactory {
                 .balanceAfter(balance)
                 .createdAt(LocalDateTime.now())
                 .build();
+        System.out.println("=================building user logs=========");
+        System.out.println(userActivity);
+        System.out.println("============================================");
+
+        return userActivity;
     }
 
     public static UserActivity balanceSent(
@@ -66,7 +82,7 @@ public class ActivityFactory {
             Double amount,
             Double balance
     ) {
-        return UserActivity.builder()
+        UserActivity userActivity = UserActivity.builder()
                 .userId(userId)
                 .activityType(ActivityType.BALANCE_SENT)
                 .title("Balance Sent")
@@ -76,5 +92,10 @@ public class ActivityFactory {
                 .createdAt(LocalDateTime.now())
                 .correlationId(MDC.get("traceId"))
                 .build();
+        System.out.println("=================building user logs=========");
+        System.out.println(userActivity);
+        System.out.println("============================================");
+
+        return userActivity;
     }
 }
