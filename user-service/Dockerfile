@@ -1,5 +1,5 @@
 # Use Eclipse Temurin JDK 21 base image
-FROM gcr.io/distroless/java21-debian12
+FROM eclipse-temurin:21-jre-debian
 
 # Set working directory inside container
 WORKDIR /app
