@@ -142,6 +142,11 @@ public class UserHierarchyService {
                         .parentPreviousAmount(parent.getBalance() + amount)
                         .parentCurrentAmount(parent.getBalance())
                         .parentTotalAmount(parent.getTotal())
+                        .childUserId(childId)
+                        .childRechargeAmount(calc.totalCredit())
+                        .childPreviousAmount(child.getBalance()- calc.totalCredit())
+                        .childCurrentAmount(child.getBalance())
+                        .childTotalAmount(child.getTotal())
                         .build()
         );
 
