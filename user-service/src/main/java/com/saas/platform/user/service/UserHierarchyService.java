@@ -111,7 +111,9 @@ public class UserHierarchyService {
                 ActivityFactory.balanceSent(
                         parentId,
                         amount,
-                        parent.getBalance()
+                        parent.getBalance(),
+                        "You recharged "+child.getFullName() +", with $"+amount
+
                 )
         );
 
@@ -119,7 +121,8 @@ public class UserHierarchyService {
                 ActivityFactory.balanceReceived(
                         childId,
                         calc.totalCredit(),
-                        child.getBalance()
+                        child.getBalance(),
+                        parent.getFullName() +", sent you $"+calc.totalCredit()
                 )
         );
 

@@ -83,7 +83,8 @@ public class ActivityFactory {
     public static UserActivity balanceReceived(
             Long userId,
             Double amount,
-            Double balance
+            Double balance,
+            String metadata
     ) {
         UserActivity userActivity = UserActivity.builder()
                 .userId(userId)
@@ -94,6 +95,7 @@ public class ActivityFactory {
                 .balanceAfter(balance)
                 .createdAt(LocalDateTime.now())
                 .correlationId(MDC.get("traceId"))
+                .metadata(metadata)
                 .build();
         System.out.println("=================building user logs=========");
         System.out.println(userActivity);
@@ -105,7 +107,8 @@ public class ActivityFactory {
     public static UserActivity balanceSent(
             Long userId,
             Double amount,
-            Double balance
+            Double balance,
+            String metadata
     ) {
         UserActivity userActivity = UserActivity.builder()
                 .userId(userId)
@@ -116,6 +119,7 @@ public class ActivityFactory {
                 .balanceAfter(balance)
                 .createdAt(LocalDateTime.now())
                 .correlationId(MDC.get("traceId"))
+                .metadata(metadata)
                 .build();
         System.out.println("=================building user logs=========");
         System.out.println(userActivity);
