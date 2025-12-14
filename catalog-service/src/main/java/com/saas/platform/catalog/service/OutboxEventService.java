@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -15,26 +16,32 @@ import java.util.List;
 public class OutboxEventService {
 
     private final OutboxEventRepository repository;
+    private static final int MAX_RETRIES = 10;
 
     @Transactional(value = "transactionManager") // 👈 Specify the bean name
-    public List<OutboxEvent> getEvents(String  status) {
+    public List<OutboxEvent> lockAndFetch(int batchSize) {
         List<OutboxEvent> events =
-                repository.findTop100ByStatusOrderByCreatedAtAsc(status);
+                repository.fetchForProcessing(LocalDateTime.now(), batchSize);
+
+        // Mark as PROCESSING while still holding DB lock
         events.forEach(e -> e.setStatus("PROCESSING"));
+
         return events;
     }
 
-    @Transactional(value = "transactionManager") // 👈 Specify the bean name
-    public void markPublished(Long id) {
-        repository.findById(id).ifPresent(e -> {
-            e.setStatus("PUBLISHED");});
+    @Transactional
+    public void markSuccess(OutboxEvent event) {
+        event.markPublished();
     }
 
-    @Transactional(value = "transactionManager") // 👈 Specify the bean name
-    public void markFailed(Long id) {
-        repository.findById(id).ifPresent(e -> {
-            e.setStatus("FAILED");
-            e.setRetryCount(e.getRetryCount() + 1);
-        });
+    @Transactional
+    public void markFailure(OutboxEvent event, Exception ex) {
+
+        if (event.getRetryCount() >= MAX_RETRIES) {
+            event.markFailed(ex.getMessage());
+        } else {
+            int backoff = (int) Math.pow(2, event.getRetryCount()) * 5;
+            event.markForRetry(ex.getMessage(), backoff);
+        }
     }
 }

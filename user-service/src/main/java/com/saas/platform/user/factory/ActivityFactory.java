@@ -12,7 +12,8 @@ public class ActivityFactory {
             Long userId,
             int keys,
             Double amount,
-            Double balance
+            Double balance,
+            String correlationId
     ) {
         UserActivity userActivity =  UserActivity.builder()
                 .userId(userId)
@@ -24,7 +25,7 @@ public class ActivityFactory {
                 .metadata("""
                     { "keys": %d }
                 """.formatted(keys))
-                .correlationId(MDC.get("traceId"))
+                .correlationId(correlationId)
                 .createdAt(LocalDateTime.now())
                 .build();
         System.out.println("=================building user logs=========");
@@ -37,7 +38,8 @@ public class ActivityFactory {
     public static UserActivity keyUsed(
             Long userId,
             String game,
-            Double balance
+            Double balance,
+            String correlationId
     ) {
         UserActivity userActivity = UserActivity.builder()
                 .userId(userId)
@@ -47,6 +49,7 @@ public class ActivityFactory {
                 .amount(0D)
                 .balanceAfter(balance)
                 .createdAt(LocalDateTime.now())
+                .correlationId(correlationId)
                 .build();
 
         System.out.println("=================building user logs=========");

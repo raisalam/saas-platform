@@ -48,7 +48,7 @@ public class OutboxEvent {
     private String status;        // PENDING, SENT, FAILED
 
     @Column(name = "retry_count", nullable = false)
-    private int retryCount;
+    private Integer retryCount;
 
     @Column(name = "last_error", length = 500)
     private String lastError;     // Error message from the last failed attempt
@@ -59,4 +59,28 @@ public class OutboxEvent {
 
     @Column(name = "published_at")
     private LocalDateTime publishedAt; // When it was successfully SENT
+
+    @Column(name = "next_retry_at")
+    private LocalDateTime nextRetryAt;
+
+
+    @Version
+    private Long version;
+    public void markForRetry(String error, int backoffSeconds) {
+        this.retryCount++;
+        this.lastError = error;
+        this.nextRetryAt = LocalDateTime.now().plusSeconds(backoffSeconds);
+        this.status = "PENDING";
+    }
+
+    public void markFailed(String error) {
+        this.retryCount++;
+        this.lastError = error;
+        this.status = "FAILED";
+    }
+
+    public void markPublished() {
+        this.status = "PUBLISHED";
+        this.publishedAt = LocalDateTime.now();
+    }
 }

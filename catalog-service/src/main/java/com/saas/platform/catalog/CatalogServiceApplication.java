@@ -6,6 +6,7 @@ import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 
 @SpringBootApplication(scanBasePackages = {"com.saas.platform.catalog", "com.saas.platform.db"})
@@ -17,6 +18,7 @@ import org.springframework.retry.annotation.EnableRetry;
 @EntityScan(basePackages = "com.saas.platform.catalog.entity")
 @EnableKafka
 @EnableRetry
+@EnableScheduling
 public class CatalogServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(CatalogServiceApplication.class, args);

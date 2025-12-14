@@ -4,6 +4,7 @@ import com.saas.platform.catalog.dto.KeyItemResponse;
 import com.saas.platform.catalog.entity.OutboxEvent;
 import com.saas.platform.catalog.repository.OutboxEventRepository;
 import com.saas.platform.catalog.service.OutboxEventService;
+import com.saas.platform.catalog.service.OutboxProcessor;
 import com.saas.platform.common.events.DomainEventHandler;
 import com.saas.platform.common.kafka.KafkaPublisher;
 import com.saas.platform.common.kafka.events.KafkaEvent;
@@ -20,6 +21,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 @Order(3) //
@@ -27,9 +29,8 @@ import java.time.LocalDateTime;
 @Slf4j
 @ConditionalOnProperty(prefix = "saas.common.kafka", name = "enabled", havingValue = "true")
 public class KafkaKeyGeneratedHandler implements DomainEventHandler<KeyGeneratedEvent> {
-
-    private final KafkaPublisher kafkaPublisher;
-
+    private final OutboxEventRepository outboxRepository;
+    private final OutboxProcessor processor;
     private final OutboxEventService outboxEventService;
     private final ObjectMapper mapper;
 
@@ -39,22 +40,15 @@ public class KafkaKeyGeneratedHandler implements DomainEventHandler<KeyGenerated
     }
 
     @Override
-    public void handle(KeyGeneratedEvent event) {
-        log.debug("KafkaKeyGeneratedHandler :: handle :: {} - {}", event.getUserId(), event.getBalance());
-        TenantContext.setTenantId(event.getTenantId());
+    public void handle(KeyGeneratedEvent localEvent) {
+        log.debug("KafkaKeyGeneratedHandler :: handle :: {} - {}", localEvent.getUserId(), localEvent.getBalance());
+        TenantContext.setTenantId(localEvent.getTenantId());
         TenantContext.setMicroservice("catalog");
-        for (OutboxEvent pending : outboxEventService.getEvents("PENDING")) {
-            kafkaPublisher.publishAsync(KafkaEvent.builder()
-                    .tenantId(pending.getTenantId())
-                    .aggerateId(pending.getAggregateId())
-                    .correlationId(pending.getEventCorrelationId())
-                            .eventType("KeyGenerated")
-                    .payload(pending.getPayload()).build());
-            pending.setStatus("PUBLISHED");
-            pending.setPublishedAt(LocalDateTime.now());
-            pending.setEventType("KeyGenerated");
-            outboxEventService.markPublished(pending.getId());
+        List<OutboxEvent> events =
+                outboxEventService.lockAndFetch(50);
 
+        for (OutboxEvent event : events) {
+            processor.processEvent(event);
         }
     }
 }
