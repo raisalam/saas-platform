@@ -63,7 +63,6 @@ public class OutboxEvent {
     @Column(name = "next_retry_at")
     private LocalDateTime nextRetryAt;
 
-
     @Version
     private Long version;
     public void markForRetry(String error, int backoffSeconds) {

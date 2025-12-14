@@ -42,6 +42,9 @@ public class UserActivity {
     @Column(name = "correlation_id")
     private String correlationId;
 
+    @Version
+    private Long version;
+
     @Builder.Default
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
