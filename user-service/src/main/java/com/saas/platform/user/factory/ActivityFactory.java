@@ -42,7 +42,7 @@ public class ActivityFactory {
                 .userId(userId)
                 .activityType(ActivityType.KEY_GENERATED)
                 .title("Keys Generated")
-                .message(keys + " keys generated")
+                .message(keys.size() + " keys generated")
                 .amount(amount)
                 .balanceAfter(balance)
                 .metadata(objectMapper.writeValueAsString(metadata))
