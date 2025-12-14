@@ -31,7 +31,7 @@ public class OutboxScheduler {
     private final Semaphore semaphore = new Semaphore(1);
 
 
-    @Scheduled(fixedDelayString = "${outbox.poll.interval:3000}")
+    @Scheduled(fixedDelayString = "${outbox.poll.interval:30000}")
     public void publishOutboxEvents() {
 
         if (!semaphore.tryAcquire()) {
