@@ -25,7 +25,7 @@ public class UserActivity {
 
     @Enumerated(EnumType.STRING)
 
-    @Column(name = "user_id")
+    @Column(name = "activity_type")
     private ActivityType activityType;
 
     private String title;
