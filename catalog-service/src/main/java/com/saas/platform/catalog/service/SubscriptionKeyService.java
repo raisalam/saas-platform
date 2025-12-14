@@ -140,6 +140,7 @@ public class SubscriptionKeyService {
             for (Map.Entry<String, Integer> planEntry : gameEntry.getValue().entrySet()) {
                 Long planId = Long.valueOf(planEntry.getKey());
                 Integer qty = planEntry.getValue();
+                System.out.println(planId+"===Going to search plan entry from map ===="+planMap);
                 Plan plan = Optional.ofNullable(planMap.get(planId))
                         .orElseThrow(() -> new RuntimeException("Plan disabled or not found: " + planId));
 

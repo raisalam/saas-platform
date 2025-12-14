@@ -7,6 +7,7 @@ import lombok.*;
 @Table(name = "plans")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
+@ToString
 public class Plan {
 
     @Id
