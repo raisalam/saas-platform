@@ -15,6 +15,9 @@ java {
 repositories {
     mavenCentral()
     mavenLocal()      // ← REQUIRED to load your local lib
+    maven {
+        url = uri("https://packages.confluent.io/maven/")
+    }
 
     maven {
         url = uri("https://maven.pkg.github.com/raisalam/saas-libs")
@@ -32,6 +35,7 @@ dependencies {
     implementation("org.mapstruct:mapstruct:1.5.5.Final")
     implementation("jakarta.validation:jakarta.validation-api:3.1.0")
     implementation("org.springframework.kafka:spring-kafka")
+    implementation("org.apache.kafka:kafka-clients:8.1.1-ce")
 
 
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
