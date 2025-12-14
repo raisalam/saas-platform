@@ -85,10 +85,10 @@ public class KeysEventListener {
                 userActivityService.log(
                         ActivityFactory.keyGenerated(
                                 payload.getUserId(),
-                                payload.getKeys().getKeys().size(),
+                                payload.getKeys().getKeys(),
                                 payload.getTotalCost(),
                                 payload.getBalance()-payload.getTotalCost(),
-                                payload.getCorrelationId()
+                                eventCorrelationId
                         )
                 );
 
@@ -102,7 +102,6 @@ public class KeysEventListener {
             log.info("ACK committed for event {}", eventCorrelationId);
 
         } catch (Exception ex) {
-            ex.printStackTrace();
 
             log.error("❌ Error processing event {}: {}", eventCorrelationId, ex.getMessage(), ex);
             // DO NOT ACK on failure. The @Transactional will roll back DB/idempotency check.

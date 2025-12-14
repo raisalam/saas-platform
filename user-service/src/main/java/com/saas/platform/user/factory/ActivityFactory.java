@@ -1,20 +1,43 @@
 package com.saas.platform.user.factory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.saas.platform.user.entity.ActivityType;
 import com.saas.platform.user.entity.UserActivity;
+import com.saas.platform.user.listener.payload.KeyItemResponse;
 import org.slf4j.MDC;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ActivityFactory {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public static UserActivity keyGenerated(
             Long userId,
-            int keys,
+            List<KeyItemResponse> keys,
             Double amount,
             Double balance,
             String correlationId
-    ) {
+    ) throws JsonProcessingException {
+
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("totalKeys", keys.size());
+
+        List<Map<String, Object>> keyDetails = keys.stream()
+                .map(k -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("key", k.getKeyValue());
+                    m.put("gameId", k.getGameId());
+                    m.put("planId", k.getPlanId());
+                    m.put("durationMinutes", k.getDurationMinutes());
+                    return m;
+                })
+                .toList();
+
+        metadata.put("keys", keyDetails);
         UserActivity userActivity =  UserActivity.builder()
                 .userId(userId)
                 .activityType(ActivityType.KEY_GENERATED)
@@ -22,9 +45,7 @@ public class ActivityFactory {
                 .message(keys + " keys generated")
                 .amount(amount)
                 .balanceAfter(balance)
-                .metadata("""
-                    { "keys": %d }
-                """.formatted(keys))
+                .metadata(objectMapper.writeValueAsString(metadata))
                 .correlationId(correlationId)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -72,6 +93,7 @@ public class ActivityFactory {
                 .amount(amount)
                 .balanceAfter(balance)
                 .createdAt(LocalDateTime.now())
+                .correlationId(MDC.get("traceId"))
                 .build();
         System.out.println("=================building user logs=========");
         System.out.println(userActivity);
