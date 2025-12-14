@@ -102,6 +102,8 @@ public class KeysEventListener {
 
         } catch (Exception ex) {
             ex.printStackTrace();
+            ack.acknowledge();
+
             log.error("❌ Error processing event {}: {}", eventCorrelationId, ex.getMessage(), ex);
             // DO NOT ACK on failure. The @Transactional will roll back DB/idempotency check.
             // Spring Kafka will retry based on configuration.
