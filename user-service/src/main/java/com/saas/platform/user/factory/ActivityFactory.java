@@ -109,7 +109,7 @@ public class ActivityFactory {
             Double amount,
             Double balance,
             Map<String, String> metadata
-    ) {
+    ) throws JsonProcessingException {
         UserActivity userActivity = UserActivity.builder()
                 .userId(userId)
                 .activityType(ActivityType.BALANCE_SENT)
