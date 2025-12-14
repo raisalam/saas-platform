@@ -34,8 +34,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.mapstruct:mapstruct:1.5.5.Final")
     implementation("jakarta.validation:jakarta.validation-api:3.1.0")
-    implementation("org.springframework.kafka:spring-kafka")
-    implementation("org.apache.kafka:kafka-clients:8.1.1-ce")
+    implementation("org.springframework.kafka:spring-kafka:3.2.4")
+    implementation("org.apache.kafka:kafka-clients:3.7.0")
 
 
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
