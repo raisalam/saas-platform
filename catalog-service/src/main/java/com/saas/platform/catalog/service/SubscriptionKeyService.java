@@ -51,9 +51,6 @@ public class SubscriptionKeyService {
         Long sellerId = getSellerId();
 
         double balance = userClient.getBalance(TenantContext.getTenantId(), sellerId);
-        Set<Long> gameIds = extractGameIds(req);
-        Set<Long> planIds = extractPlanIds(req);
-
 
         loadGamesIfNeeded();
         loadPlansIfNeeded();
@@ -110,12 +107,6 @@ public class SubscriptionKeyService {
         return req.getCart().values().stream()
                 .flatMap(map -> map.keySet().stream().map(Long::valueOf))
                 .collect(Collectors.toSet());
-    }
-
-    private Map<Long, Game> fetchGames(Set<Long> gameIds) {
-        return gameRepo.findAllByIdInAndEnabled(gameIds, true)
-                .stream()
-                .collect(Collectors.toMap(Game::getId, g -> g));
     }
 
 

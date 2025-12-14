@@ -44,7 +44,7 @@ saas:
     kafka:
       enabled: ${KAFKA_ENABLED:false}
       bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
-      group: catalog-microservice-group
+      group: ${KAFKA_GROUP:catalog-microservice-group-dev}
 
     mqtt:
       enabled: ${MQTT_ENABLED:false}

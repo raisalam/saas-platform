@@ -1,8 +1,10 @@
 package com.saas.platform.user.listener;
 
 import com.saas.platform.db.TenantContext;
+import com.saas.platform.user.factory.ActivityFactory;
 import com.saas.platform.user.listener.payload.KeyGeneratedEvent;
 import com.saas.platform.user.service.IdempotencyService;
+import com.saas.platform.user.service.UserActivityService;
 import com.saas.platform.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,8 @@ public class KeysEventListener {
     private final ObjectMapper objectMapper;
     // 💡 Dependency needed for deduplication/idempotency check
     private final IdempotencyService idempotencyService;
+    private final UserActivityService userActivityService;
+
 
 
     @KafkaListener(
@@ -77,6 +81,16 @@ public class KeysEventListener {
                         payload.getUserId(),
                         payload.getTotalCost()// The correlation ID for logging/idempotency
                 );
+
+                userActivityService.log(
+                        ActivityFactory.keyGenerated(
+                                payload.getUserId(),
+                                payload.getKeys().getKeys().size(),
+                                payload.getTotalCost(),
+                                payload.getBalance()-payload.getTotalCost()
+                        )
+                );
+
 
                 // 4. Mark as Processed (Atomically with balance update)
                 idempotencyService.markAsProcessed(eventCorrelationId, tenantId, "KeysEventListener", eventType);

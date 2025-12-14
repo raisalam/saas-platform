@@ -51,7 +51,7 @@ saas:
     kafka:
       enabled: ${KAFKA_ENABLED:false}
       bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
-      group: user-microservice-group
+      group: ${KAFKA_GROUP:user-microservice-group-dev}
     mqtt:
       enabled: ${MQTT_ENABLED:false}
       broker: ${MQTT_BROKER:tcp://localhost:8083}

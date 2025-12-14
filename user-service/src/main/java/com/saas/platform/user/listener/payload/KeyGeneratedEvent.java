@@ -19,5 +19,7 @@ public class KeyGeneratedEvent implements DomainEvent {
     private  Double balance;
     private  Double totalCost;
     private  String correlationId;
+    private KeyGenerationResponse keys;
+
 
 }
