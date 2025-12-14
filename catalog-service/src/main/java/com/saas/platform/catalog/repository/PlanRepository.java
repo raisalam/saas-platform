@@ -11,5 +11,7 @@ public interface PlanRepository extends JpaRepository<Plan, Long> {
 
     Optional<Plan> findByIdAndEnabled(Long id, boolean enabled);
     List<Plan> findAllByIdInAndEnabled(Set<Long> ids, boolean enabled);
+    List<Plan> findAllByEnabled(boolean enabled);
+
 
 }

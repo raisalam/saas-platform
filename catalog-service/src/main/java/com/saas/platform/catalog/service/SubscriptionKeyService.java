@@ -54,13 +54,9 @@ public class SubscriptionKeyService {
         Set<Long> gameIds = extractGameIds(req);
         Set<Long> planIds = extractPlanIds(req);
 
-        if(gameMap.isEmpty()){
-            gameMap = fetchGames(gameIds);
-        }
 
-        if(planMap.isEmpty()){
-            planMap = fetchPlans(planIds);
-        }
+        loadGamesIfNeeded();
+        loadPlansIfNeeded();
 
         double totalCost = calculateTotalCost(req, gameMap, planMap);
         if (balance < totalCost) {
@@ -93,9 +89,8 @@ public class SubscriptionKeyService {
         List<SubscriptionKey> lastKeys = keyRepo.findTop20BySellerIdOrderByCreatedDateDesc(sellerId);
 
         // Fetch all plans needed to map keys to gameId
-        Set<Long> planIds = lastKeys.stream().map(SubscriptionKey::getPlanId).collect(Collectors.toSet());
-        Map<Long, Plan> planMap = fetchPlans(planIds);
-
+        loadGamesIfNeeded();
+        loadPlansIfNeeded();
         return mapToResponse(lastKeys, planMap);
     }
 
@@ -123,11 +118,6 @@ public class SubscriptionKeyService {
                 .collect(Collectors.toMap(Game::getId, g -> g));
     }
 
-    private Map<Long, Plan> fetchPlans(Set<Long> planIds) {
-        return planRepo.findAllByIdInAndEnabled(planIds, true)
-                .stream()
-                .collect(Collectors.toMap(Plan::getId, p -> p));
-    }
 
     private double calculateTotalCost(KeyGenerationRequest req, Map<Long, Game> gameMap, Map<Long, Plan> planMap) {
         double totalCost = 0;
@@ -140,7 +130,7 @@ public class SubscriptionKeyService {
             for (Map.Entry<String, Integer> planEntry : gameEntry.getValue().entrySet()) {
                 Long planId = Long.valueOf(planEntry.getKey());
                 Integer qty = planEntry.getValue();
-                System.out.println(planId+"===Going to search plan entry from map ===="+planMap);
+                System.out.println(planId + "===Going to search plan entry from map ====" + planMap);
                 Plan plan = Optional.ofNullable(planMap.get(planId))
                         .orElseThrow(() -> new RuntimeException("Plan disabled or not found: " + planId));
 
@@ -212,4 +202,19 @@ public class SubscriptionKeyService {
         // Use Jackson ObjectMapper or similar to serialize the event object
         return objectMapper.writeValueAsString(object);
     }
+
+    private void loadGamesIfNeeded() {
+        if (gameMap.isEmpty()) {
+            gameRepo.findAllByEnabled(true)
+                    .forEach(g -> gameMap.put(g.getId(), g));
+        }
+    }
+
+    private void loadPlansIfNeeded() {
+        if (planMap.isEmpty()) {
+            planRepo.findAllByEnabled(true)
+                    .forEach(p -> planMap.put(p.getId(), p));
+        }
+    }
+
 }

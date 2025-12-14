@@ -11,5 +11,7 @@ public interface GameRepository extends JpaRepository<Game, Long> {
 
     Optional<Game> findByIdAndEnabled(Long id, boolean enabled);
     List<Game> findAllByIdInAndEnabled(Set<Long> ids, boolean enabled);
+    List<Game> findAllByEnabled(boolean enabled);
+
 
 }
