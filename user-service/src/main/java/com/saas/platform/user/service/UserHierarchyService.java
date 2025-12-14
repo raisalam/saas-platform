@@ -1,5 +1,6 @@
 package com.saas.platform.user.service;// UserHierarchyService.java
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.saas.platform.common.events.DomainEventPublisher;
 import com.saas.platform.db.TenantContext;
 import com.saas.platform.user.domain.event.key.UserRechargedEvent;
@@ -18,7 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -81,7 +84,7 @@ public class UserHierarchyService {
 // Assuming User, UserResponse, and UserRechargedEvent classes/imports are defined
 
     @Transactional("transactionManager")
-    public UserResponse rechargeSeller(Long parentId, Long childId, double amount) {
+    public UserResponse rechargeSeller(Long parentId, Long childId, double amount) throws JsonProcessingException {
 
         if (amount <= 0) {
             throw new IllegalArgumentException("Recharge amount must be positive");
@@ -107,22 +110,26 @@ public class UserHierarchyService {
         userRepo.saveAll(List.of(parent, child)); // 🚀 SINGLE FLUSH
 
         // ───────── Activity Logs ─────────
+        Map<String, String> map = new HashMap<>();
+        map.put("message","You recharged "+child.getFullName() +", with $"+amount);
         userActivityService.log(
                 ActivityFactory.balanceSent(
                         parentId,
                         amount,
                         parent.getBalance(),
-                        "You recharged "+child.getFullName() +", with $"+amount
+                        map
 
                 )
         );
 
+        Map<String, String> childMap = new HashMap<>();
+        childMap.put("message",parent.getFullName() +", sent you $"+calc.totalCredit());
         userActivityService.log(
                 ActivityFactory.balanceReceived(
                         childId,
                         calc.totalCredit(),
                         child.getBalance(),
-                        parent.getFullName() +", sent you $"+calc.totalCredit()
+                        childMap
                 )
         );
 

@@ -1,5 +1,6 @@
 package com.saas.platform.user.controller;// UserHierarchyController.java
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.saas.platform.user.dto.AddDeleteSellerDto;
 import com.saas.platform.user.dto.UserResponse;
 import com.saas.platform.user.service.UserHierarchyService;
@@ -35,7 +36,7 @@ public class UserHierarchyController {
         return ResponseEntity.ok(response);
     }
     @PostMapping("/recharge-user")
-    public ResponseEntity<UserResponse> rechargeChildSeller(@RequestBody @Validated AddDeleteSellerDto payload) {
+    public ResponseEntity<UserResponse> rechargeChildSeller(@RequestBody @Validated AddDeleteSellerDto payload) throws JsonProcessingException {
         // 1. Get the ID of the logged-in user (the parent doing the recharge)
         Long parentId = Long.valueOf(MDC.get("sellerId"));
 

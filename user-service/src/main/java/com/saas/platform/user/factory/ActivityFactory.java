@@ -84,8 +84,8 @@ public class ActivityFactory {
             Long userId,
             Double amount,
             Double balance,
-            String metadata
-    ) {
+            Map<String, String> metadata
+    ) throws JsonProcessingException {
         UserActivity userActivity = UserActivity.builder()
                 .userId(userId)
                 .activityType(ActivityType.BALANCE_RECEIVED)
@@ -95,7 +95,7 @@ public class ActivityFactory {
                 .balanceAfter(balance)
                 .createdAt(LocalDateTime.now())
                 .correlationId(MDC.get("traceId"))
-                .metadata(metadata)
+                .metadata(objectMapper.writeValueAsString(metadata))
                 .build();
         System.out.println("=================building user logs=========");
         System.out.println(userActivity);
@@ -108,7 +108,7 @@ public class ActivityFactory {
             Long userId,
             Double amount,
             Double balance,
-            String metadata
+            Map<String, String> metadata
     ) {
         UserActivity userActivity = UserActivity.builder()
                 .userId(userId)
@@ -119,7 +119,7 @@ public class ActivityFactory {
                 .balanceAfter(balance)
                 .createdAt(LocalDateTime.now())
                 .correlationId(MDC.get("traceId"))
-                .metadata(metadata)
+                .metadata(objectMapper.writeValueAsString(metadata))
                 .build();
         System.out.println("=================building user logs=========");
         System.out.println(userActivity);
