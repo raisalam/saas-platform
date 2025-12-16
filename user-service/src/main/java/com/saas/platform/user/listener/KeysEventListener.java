@@ -58,6 +58,7 @@ public class KeysEventListener {
 
             // Set context for database routing/MDC
             TenantContext.setTenantId(tenantId);
+            MDC.put("tenantId", tenantId);
             TenantContext.setMicroservice("user");
 
             System.out.println("=====================context set========"+TenantContext.getTenantId()+" = "+TenantContext.getMicroservice());
