@@ -1,6 +1,8 @@
 package com.saas.platform.user.listener;
 
+import com.saas.platform.common.mqtt.MqttService;
 import com.saas.platform.db.TenantContext;
+import com.saas.platform.user.entity.UserActivity;
 import com.saas.platform.user.factory.ActivityFactory;
 import com.saas.platform.user.listener.payload.KeyGeneratedEvent;
 import com.saas.platform.user.service.IdempotencyService;
@@ -29,6 +31,8 @@ public class KeysEventListener {
     // 💡 Dependency needed for deduplication/idempotency check
     private final IdempotencyService idempotencyService;
     private final UserActivityService userActivityService;
+    private final MqttService mqttService;
+
 
 
 
@@ -82,16 +86,18 @@ public class KeysEventListener {
                         payload.getTotalCost()// The correlation ID for logging/idempotency
                 );
 
+                UserActivity userActivity =  ActivityFactory.keyGenerated(
+                        payload.getUserId(),
+                        payload.getKeys().getKeys(),
+                        payload.getTotalCost(),
+                        payload.getBalance()-payload.getTotalCost(),
+                        eventCorrelationId
+                );
                 userActivityService.log(
-                        ActivityFactory.keyGenerated(
-                                payload.getUserId(),
-                                payload.getKeys().getKeys(),
-                                payload.getTotalCost(),
-                                payload.getBalance()-payload.getTotalCost(),
-                                eventCorrelationId
-                        )
+                        userActivity
                 );
 
+                mqttService.publishAsync( "user/" + payload.getUserId()+"/activity", objectMapper.writeValueAsString(userActivity));
 
                 // 4. Mark as Processed (Atomically with balance update)
                 idempotencyService.markAsProcessed(eventCorrelationId, tenantId, "KeysEventListener", eventType);

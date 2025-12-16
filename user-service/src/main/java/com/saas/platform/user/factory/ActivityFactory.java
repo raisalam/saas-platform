@@ -43,7 +43,7 @@ public class ActivityFactory {
                 .activityType(ActivityType.KEY_GENERATED)
                 .title("Keys Generated")
                 .message(keys.size() + " keys generated")
-                .amount(amount)
+                .amount(0-amount)
                 .balanceAfter(balance)
                 .metadata(objectMapper.writeValueAsString(metadata))
                 .correlationId(correlationId)

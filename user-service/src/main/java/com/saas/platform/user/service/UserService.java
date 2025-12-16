@@ -18,8 +18,10 @@ import com.saas.platform.user.mapper.UserMapper;
 import com.saas.platform.user.repository.RoleRepository;
 import com.saas.platform.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.util.StringUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -90,8 +92,9 @@ public class UserService {
             throw new IllegalArgumentException("Invalid username/email or password");
         }
 
-        // Verify device
-        if (!dto.getAndroidId().equals(user.getAndroidId())) {
+        if (StringUtils.hasText(user.getAndroidId())) {
+           user.setAndroidId(user.getAndroidId());
+        } else if (!dto.getAndroidId().equals(user.getAndroidId())) {
             throw new IllegalArgumentException("Android not recognized");
         }
         UserLoggedInEvent event = UserLoggedInEvent.builder()
@@ -109,7 +112,6 @@ public class UserService {
 
         String token = generateUserToken(user);
         // Generate refresh token
-        System.out.printf(token);
         String refreshToken = UUID.randomUUID().toString();
 
         // Save refresh token to user
