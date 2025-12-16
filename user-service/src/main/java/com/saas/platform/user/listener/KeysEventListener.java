@@ -107,7 +107,7 @@ public class KeysEventListener {
                                 .version(1)
                                 .build();
 
-                mqttService.publishAsync( "user/" + payload.getUserId()+"/activity", objectMapper.writeValueAsString(userActivity));
+                mqttService.publishAsync( "user/" + payload.getUserId()+"/activity", objectMapper.writeValueAsString(mqttEvent));
 
                 // 4. Mark as Processed (Atomically with balance update)
                 idempotencyService.markAsProcessed(eventCorrelationId, tenantId, "KeysEventListener", eventType);

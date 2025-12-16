@@ -1,6 +1,10 @@
 package com.saas.platform.catalog.domain.event.handler.mqtt;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.saas.platform.catalog.dto.BalanceUpdatedPayload;
 import com.saas.platform.common.events.DomainEventHandler;
+import com.saas.platform.common.mqtt.MqttEvent;
 import com.saas.platform.common.mqtt.MqttService;
 import com.saas.platform.catalog.domain.event.key.KeyGeneratedEvent;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +21,8 @@ import org.springframework.stereotype.Component;
 public class MqttKeyGeneratedHandler implements DomainEventHandler<KeyGeneratedEvent> {
 
     private final MqttService mqttService;
+    private final ObjectMapper objectMapper;
+
 
     @Override
     public Class<KeyGeneratedEvent> eventType() {
@@ -27,14 +33,20 @@ public class MqttKeyGeneratedHandler implements DomainEventHandler<KeyGeneratedE
     public void handle(KeyGeneratedEvent user) {
         log.debug("MqttKeyGeneratedHandler :: handle :: {} - {}", user.getUserId(), user.getBalance());
 
-        String message = String.format("""
-                        {
-                          "type": "BalanceUpdated",
-                          "balance": %s
-                        }
-                        """,
-                user.getBalance() - user.getTotalCost());
+        BalanceUpdatedPayload payload =
+                new BalanceUpdatedPayload(user.getBalance() - user.getTotalCost(), false);
+        MqttEvent<BalanceUpdatedPayload> event =
+                MqttEvent.<BalanceUpdatedPayload>builder()
+                        .type("BalanceUpdated")
+                        .payload(payload)
+                        .correlationId(user.getCorrelationId()) // use same correlationId
+                        .version(1)
+                        .build();
 
-        mqttService.publishAsync("user/" + user.getUserId() + "/events", message, 1, true);
-    }
+        try {
+            mqttService.publishAsync("user/" + user.getUserId() + "/events", objectMapper.writeValueAsString(event), 1, true);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+  }
 }
