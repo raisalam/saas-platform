@@ -23,7 +23,8 @@ public class MicroserviceFilter extends OncePerRequestFilter {
     // Define public paths (no JWT required)
     private static final List<String> PUBLIC_PATHS = List.of(
             "/api/user/login",
-            "/api/user/register"
+            "/api/user/register",
+            "/api/user/refresh"
     );
 
     private static boolean isPublicPath(String path) {

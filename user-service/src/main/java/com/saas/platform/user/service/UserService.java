@@ -13,6 +13,7 @@ import com.saas.platform.user.dto.UserResponse;
 import com.saas.platform.user.entity.Role;
 import com.saas.platform.user.entity.User;
 import com.saas.platform.user.entity.UserAttribute;
+import com.saas.platform.user.mapper.UserActivityMapper;
 import com.saas.platform.user.mapper.UserMapper;
 import com.saas.platform.user.repository.RoleRepository;
 import com.saas.platform.user.repository.UserRepository;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 
 @Service
@@ -59,7 +61,7 @@ public class UserService {
 
 
         // Save
-         user =  repo.save(user);
+        user = repo.save(user);
         UserRegisteredEvent event = UserRegisteredEvent.builder()
                 .userId(user.getId())
                 .username(user.getUsername())
@@ -105,10 +107,10 @@ public class UserService {
         // 🔥 publish once → all enabled handlers will run automatically
         eventPublisher.publish(event);
 
-        String token = generateUserToken( user);
+        String token = generateUserToken(user);
         // Generate refresh token
         System.out.printf(token);
-        String refreshToken = jwtService.generateRefreshToken(user.getUsername());
+        String refreshToken = UUID.randomUUID().toString();
 
         // Save refresh token to user
         user.setRefreshToken(refreshToken);
@@ -139,42 +141,28 @@ public class UserService {
     public TokenResponse refresh(String refreshToken) {
         // Validate token format and expiration
         /**
-         if (!jwtService.validate(refreshToken) || jwtService.isExpired(refreshToken)) {
-         throw new IllegalArgumentException("Invalid or expired refresh token");
-         }
 
          // Extract username from token
          String username = jwtService.getSubject(refreshToken);
          */
         // Find user
-        User user = repo.findByUsername("username")
+        User user = repo.findByRefreshToken(refreshToken)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Check stored refresh token matches
-        if (!refreshToken.equals(user.getRefreshToken())) {
-            throw new IllegalArgumentException("Refresh token mismatch");
-        }
-/**
- // Generate new tokens
- String newAccessToken = jwtService.generateAccessToken(
- user.getUsername(),
- Map.of(
- "role", user.getRole().getName(),
- "userId", user.getId()
- )
- );
 
- String newRefreshToken = jwtService.generateRefreshToken(user.getUsername());
- **/
+        // Generate new tokens
+        String newAccessToken = generateUserToken(user);
+        String newRefreshToken = UUID.randomUUID().toString();
+
         // Update stored refresh token
-        user.setRefreshToken("newRefreshToken");
+        user.setRefreshToken(newRefreshToken);
         repo.save(user);
 
         return new TokenResponse(
                 user.getId(),
-                "newAccessToken",
-                "newRefreshToken",
-                user.getUsername(),
+                newAccessToken,
+                newRefreshToken,
+                user.getFullName(),
                 user.getRole().getName(),
                 getAvatar(user)
         );
@@ -231,12 +219,12 @@ public class UserService {
 
 
     @Transactional(value = "transactionManager") // 👈 Specify the bean name
-    public UserResponse updateBalance(Long userId,  Double totalCost) {
-        User user  = repo.findById(userId).orElseThrow(()->new RuntimeException("User not found"));
-        System.out.println("User current balance === "+user.getBalance());
-        System.out.println("Total cost is "+totalCost);
+    public UserResponse updateBalance(Long userId, Double totalCost) {
+        User user = repo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        System.out.println("User current balance === " + user.getBalance());
+        System.out.println("Total cost is " + totalCost);
         user.setBalance(user.getBalance() - totalCost);
-        System.out.println("Final user gabalnce = "+user.getBalance());
+        System.out.println("Final user gabalnce = " + user.getBalance());
         return mapper.toResponse(user);
     }
 
