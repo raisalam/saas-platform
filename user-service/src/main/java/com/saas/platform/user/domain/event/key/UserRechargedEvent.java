@@ -28,6 +28,9 @@ public class UserRechargedEvent implements DomainEvent {
     private Double childTotalAmount;
     private String childRole;
     private boolean childActive;
+    private String correlationId;
+
+
 
 
 

@@ -1,9 +1,13 @@
 package com.saas.platform.user.domain.event.handler.mqtt;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.saas.platform.common.events.DomainEventHandler;
+import com.saas.platform.common.mqtt.MqttEvent;
 import com.saas.platform.common.mqtt.MqttService;
 import com.saas.platform.user.domain.event.key.UserLoggedInEvent;
 import com.saas.platform.user.domain.event.key.UserRechargedEvent;
+import com.saas.platform.user.dto.BalanceUpdatedPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -17,6 +21,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class MqttUserRechargedHandler implements DomainEventHandler<UserRechargedEvent> {
 
+    private final ObjectMapper objectMapper;
+
     private final MqttService mqttService;
 
     @Override
@@ -24,31 +30,68 @@ public class MqttUserRechargedHandler implements DomainEventHandler<UserRecharge
         return UserRechargedEvent.class;
     }
 
-    @Override
     public void handle(UserRechargedEvent event) {
-        log.debug("MqttUserRechargedHandler :: handle :: {} - {} - {}", event.getChildUserId(), event.getChildRechargeAmount(), event.getParentRechargeAmount());
-
-        String parentMessage = String.format("""
-        {
-          "type": "BalanceUpdated",
-          "balance": %s
-        }
-        """,
-                event.getParentCurrentAmount().toString()
+        log.debug(
+                "MqttUserRechargedHandler :: handle :: parent={} child={} parentAmt={} childAmt={}",
+                event.getParentUserId(),
+                event.getChildUserId(),
+                event.getParentRechargeAmount(),
+                event.getChildRechargeAmount()
         );
 
-        mqttService.publishAsync( "user/" + event.getParentUserId()+"/events", parentMessage, 1, true);
+        final String correlationId = event.getCorrelationId(); // must exist
 
-        String childMessage = String.format("""
-        {
-          "type": "BalanceUpdated",
-          "balance": %s,
-          "notify":true
+        /* ---------------- PARENT ---------------- */
+
+        BalanceUpdatedPayload parentPayload =
+                BalanceUpdatedPayload.builder()
+                        .balance(event.getParentCurrentAmount())
+                        .build();
+
+        MqttEvent<BalanceUpdatedPayload> parentEvent =
+                MqttEvent.<BalanceUpdatedPayload>builder()
+                        .type("BalanceUpdated")
+                        .payload(parentPayload)
+                        .correlationId(correlationId)
+                        .version(1)
+                        .build();
+
+
+
+        /* ---------------- CHILD ---------------- */
+
+        BalanceUpdatedPayload childPayload =
+                BalanceUpdatedPayload.builder()
+                        .balance(event.getChildCurrentAmount())
+                        .notify(true) // 👈 ONLY child has notify
+                        .build();
+
+        MqttEvent<BalanceUpdatedPayload> childEvent =
+                MqttEvent.<BalanceUpdatedPayload>builder()
+                        .type("BalanceUpdated")
+                        .payload(childPayload)
+                        .correlationId(correlationId)
+                        .version(1)
+                        .build();
+
+        try {
+
+            mqttService.publishAsync(
+                    "user/" + event.getParentUserId() + "/events",
+                    objectMapper.writeValueAsString(parentEvent),
+                    1,
+                    true
+            );
+
+
+            mqttService.publishAsync(
+                    "user/" + event.getChildUserId() + "/events",
+                    objectMapper.writeValueAsString(childEvent),
+                    1,
+                    true
+            );
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
-        """,
-                event.getChildCurrentAmount().toString()
-        );
-
-        mqttService.publishAsync( "user/" + event.getChildUserId()+"/events", childMessage, 1, true);
     }
 }

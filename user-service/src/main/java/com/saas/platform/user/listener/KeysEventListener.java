@@ -1,5 +1,6 @@
 package com.saas.platform.user.listener;
 
+import com.saas.platform.common.mqtt.MqttEvent;
 import com.saas.platform.common.mqtt.MqttService;
 import com.saas.platform.db.TenantContext;
 import com.saas.platform.user.entity.UserActivity;
@@ -97,6 +98,14 @@ public class KeysEventListener {
                 userActivityService.log(
                         userActivity
                 );
+
+                MqttEvent<UserActivity> mqttEvent =
+                        MqttEvent.<UserActivity>builder()
+                                .type("UserActivity")
+                                .payload(userActivity)
+                                .correlationId(eventCorrelationId)
+                                .version(1)
+                                .build();
 
                 mqttService.publishAsync( "user/" + payload.getUserId()+"/activity", objectMapper.writeValueAsString(userActivity));
 

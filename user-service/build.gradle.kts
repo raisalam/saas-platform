@@ -49,7 +49,7 @@ dependencies {
     //implementation("com.saas.platform:saas-db:1.0.1")
     //implementation("com.saas.platform:saas-common:1.0.2")
       implementation("com.saas.platform:saas-db:1.0.1")
-      implementation("com.saas.platform:saas-common:1.0.7")
+      implementation("com.saas.platform:saas-common:1.0.8")
 
     implementation("com.mysql:mysql-connector-j")
 }
