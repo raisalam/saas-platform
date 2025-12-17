@@ -81,6 +81,7 @@ public class UserService {
         return mapper.toResponse(user);
     }
 
+    @Transactional(value = "transactionManager")
     public TokenResponse login(LoginRequest dto) {
         // Find user by username or email
         User user = repo.findByUsername(dto.getEmail())
@@ -140,6 +141,7 @@ public class UserService {
                 .orElseThrow();
     }
 
+    @Transactional(value = "transactionManager")
     public TokenResponse refresh(String refreshToken) {
         // Validate token format and expiration
         /**
