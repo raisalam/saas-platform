@@ -93,7 +93,7 @@ public class UserService {
             throw new IllegalArgumentException("Invalid username/email or password");
         }
 
-        if (StringUtils.hasText(user.getAndroidId())) {
+        if (!StringUtils.hasText(user.getAndroidId())) {
            user.setAndroidId(user.getAndroidId());
         } else if (!dto.getAndroidId().equals(user.getAndroidId())) {
             throw new IllegalArgumentException("Android not recognized");
