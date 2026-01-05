@@ -23,10 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -230,6 +228,23 @@ public class UserService {
         user.setBalance(user.getBalance() - totalCost);
         System.out.println("Final user gabalnce = " + user.getBalance());
         return mapper.toResponse(user);
+    }
+
+    public Map<Long, String> getUsernamesByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        // Fetch users from repository
+        List<User> users = repo.findAllById(ids);
+
+        // Convert list to Map<Id, Username>
+        return users.stream()
+                .collect(Collectors.toMap(
+                        User::getId,
+                        User::getUsername,
+                        (existing, replacement) -> existing // Handle potential duplicates safely
+                ));
     }
 
     public void deductBalance(String tenantId, Long userId, Double totalCost, String correlationId) {

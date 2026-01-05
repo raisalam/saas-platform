@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/catalog/key")
 @RequiredArgsConstructor
@@ -30,10 +32,14 @@ public class KeyController {
     @PostMapping("/all")
     public ResponseEntity<KeyGenerationResponse> recentKeys() {
         System.out.println("===========================inside recent controller=======");
-
         return ResponseEntity.ok(keyService.fetchLastKeysForSeller());
+    }
+    @PostMapping("/report")
+    public ResponseEntity<Map<String, Object>> getreport() {
+        System.out.println("===========================inside recent controller=======");
+
+        return ResponseEntity.ok(keyService.getSellerDashboard());
 
     }
-
 
 }

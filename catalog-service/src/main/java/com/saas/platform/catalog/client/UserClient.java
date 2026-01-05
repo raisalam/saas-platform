@@ -14,10 +14,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import tools.jackson.databind.ObjectMapper;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -155,6 +152,40 @@ public class UserClient {
                 entity,
                 Void.class
         );
+    }
+
+    /**
+     * Fetches multiple usernames in a single batch call.
+     * URL Example: /users/names?ids=1,2,3
+     */
+    public Map<String, String> getUsernamesBatch(Set<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Map.of();
+        }
+
+        try {
+            // Convert Set to comma-separated String
+            String idsParam = userIds.stream()
+                    .map(String::valueOf)
+                    .collect(java.util.stream.Collectors.joining(","));
+
+            String url = userServiceBaseUrl + "/names?ids=" + idsParam;
+
+            HttpEntity<Void> entity = new HttpEntity<>(defaultHeaders(0L)); // System-level or dummy ID for headers
+
+            // Expected response from User Service: Map<Long, String>
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    Map.class
+            );
+
+            return response.getBody() != null ? (Map<String, String>) response.getBody() : Map.of();
+        } catch (Exception e) {
+            log.error("Failed to fetch batch usernames for ids={}", userIds, e);
+            return Map.of();
+        }
     }
 
     private HttpHeaders defaultHeaders(Long userId) {

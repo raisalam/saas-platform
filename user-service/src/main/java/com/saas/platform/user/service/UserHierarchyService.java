@@ -56,11 +56,15 @@ public class UserHierarchyService {
         User parent = userRepo.findById(parentId).orElseThrow(() -> new RuntimeException("User not found"));
         User child = userRepo.findByEmail(childEmail).orElseThrow(() -> new RuntimeException("User not found"));
         if (!child.isActive()) {
-            throw new RuntimeException("Seller is inactive");
+            throw new IllegalArgumentException("Seller is inactive");
+        }
+
+        if (parent.getId().equals(child.getId())) {
+            throw new IllegalArgumentException("You cannot add yourself");
         }
 
         if (hierarchyRepo.existsByParentIdAndChildId(parentId, child.getId())) {
-            throw new RuntimeException("Already mapped with other");
+            throw new IllegalArgumentException("Already mapped with other");
         }
         hierarchyRepo.save(UserHierarchy.builder()
                 .parent(parent)

@@ -6,10 +6,7 @@ import com.saas.platform.catalog.domain.event.key.KeyGeneratedEvent;
 import com.saas.platform.catalog.dto.KeyGenerationRequest;
 import com.saas.platform.catalog.dto.KeyGenerationResponse;
 import com.saas.platform.catalog.dto.KeyItemResponse;
-import com.saas.platform.catalog.entity.Game;
-import com.saas.platform.catalog.entity.OutboxEvent;
-import com.saas.platform.catalog.entity.Plan;
-import com.saas.platform.catalog.entity.SubscriptionKey;
+import com.saas.platform.catalog.entity.*;
 import com.saas.platform.catalog.mapper.KeyMapper;
 import com.saas.platform.catalog.repository.GameRepository;
 import com.saas.platform.catalog.repository.OutboxEventRepository;
@@ -24,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -186,6 +184,92 @@ public class SubscriptionKeyService {
                 .build();
 
         outboxRepository.save(outboxEvent);
+    }
+    public Map<String, Object> getSellerDashboard() {
+        Long sellerId = getSellerId();
+        String userRole = MDC.get("userRole");
+        boolean isAdmin = "ADMIN".equals(userRole);
+
+        // Fetch data based on role
+        List<ReportStatsProjection> stats = isAdmin ?
+                keyRepo.getComprehensiveReport(null) :
+                keyRepo.getComprehensiveReport(sellerId);
+
+        LocalDate today = LocalDate.now();
+
+        // 1. Find today's stats
+        ReportStatsProjection todayStats = stats.stream()
+                .filter(s -> s.getStatDate() != null && s.getStatDate().isEqual(today))
+                .findFirst()
+                .orElse(null);
+
+        // 2. Aggregate totals & Prepare Trend List in one pass
+        double totalGeneratedSum = 0;
+        double totalUsedSum = 0;
+        double totalSavingsSum = 0;
+
+        List<Map<String, Object>> trendList = new ArrayList<>();
+
+        for (ReportStatsProjection s : stats) {
+            double gen = s.getTotalGenerated() != null ? s.getTotalGenerated() : 0.0;
+            double used = s.getTotalUsed() != null ? s.getTotalUsed() : 0.0;
+            double sav = s.getTotalDiscount() != null ? s.getTotalDiscount() : 0.0;
+
+            totalGeneratedSum += gen;
+            totalUsedSum += used;
+            totalSavingsSum += sav;
+
+            if (s.getStatDate() != null) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("date", s.getStatDate().toString());
+                map.put("generated", gen);
+                map.put("used", used);
+                map.put("savings", sav);
+                trendList.add(map);
+            }
+        }
+
+        // 3. Build Final Response
+        Map<String, Object> data = new HashMap<>();
+        data.put("totalGeneratedToday", todayStats != null ? todayStats.getTotalGenerated() : 0.0);
+        data.put("totalUsedToday", todayStats != null ? todayStats.getTotalUsed() : 0.0);
+        data.put("last30Days", trendList);
+
+        // Status Breakdown (for Pie Chart)
+        data.put("groupedByDate", List.of(
+                Map.of("status", "Generated", "count", totalGeneratedSum),
+                Map.of("status", "Used", "count", totalUsedSum),
+                Map.of("status", "Savings", "count", totalSavingsSum)
+        ));
+
+        // 4. Admin Enrichment logic
+        if (isAdmin) {
+            List<Map<String, Object>> rawStats = keyRepo.getAdminRawStats();
+
+            Set<Long> sellerIds = rawStats.stream()
+                    .map(s -> ((Number) s.get("sellerId")).longValue()) // Use Number to avoid cast exceptions
+                    .collect(Collectors.toSet());
+
+            // Batch call User Microservice
+            Map<String, String> idToNameMap = userClient.getUsernamesBatch(sellerIds);
+            List<Map<String, Object>> enrichedStats = rawStats.stream().map(stat -> {
+                Map<String, Object> enriched = new HashMap<>(stat);
+                String sIdStr = String.valueOf(stat.get("sellerId"));
+                // FIXED: Use sId (the seller in the list) not sellerId (the admin)
+                String name = idToNameMap.getOrDefault(sIdStr, "Seller " + sIdStr);                enriched.put("sellerName", name);
+
+                // Rename 'statDate' to 'date' to match your Flutter model if necessary
+                if(stat.containsKey("statDate")) {
+                    enriched.put("date", stat.get("statDate").toString());
+                }
+
+                return enriched;
+            }).collect(Collectors.toList());
+
+            data.put("sellerStats", enrichedStats);
+        }
+
+        return data;
     }
 
     // Placeholder for JSON serialization
