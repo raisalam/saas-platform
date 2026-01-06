@@ -44,31 +44,31 @@ public class KeysEventListener {
             String eventType = getHeader(record, "event-type");
             eventCorrelationId = getHeader(record, "correlation-id"); // Get the unique ID from Outbox
 
-            if (tenantId == null || eventCorrelationId == null) {
-                throw new IllegalStateException("Required Kafka header (Tenant ID or Correlation ID) missing.");
-            }
 
             try {
-            // Set context for database routing/MDC
-            TenantContext.setTenantId(tenantId);
-            MDC.put("tenantId", tenantId);
-            TenantContext.setMicroservice("catalog");
-            KeyUsedEvent payload = objectMapper.readValue(record.value(), KeyUsedEvent.class);
-            SubscriptionKey subscriptionKey = subscriptionKeyService.markKeyUsed(payload.getKey());
+                if (tenantId == null || eventCorrelationId == null) {
+                    throw new IllegalStateException("Required Kafka header (Tenant ID or Correlation ID) missing.");
+                }
+                // Set context for database routing/MDC
+                TenantContext.setTenantId(tenantId);
+                MDC.put("tenantId", tenantId);
+                TenantContext.setMicroservice("catalog");
+                KeyUsedEvent payload = objectMapper.readValue(record.value(), KeyUsedEvent.class);
+                SubscriptionKey subscriptionKey = subscriptionKeyService.markKeyUsed(payload.getKey());
 
-            payload.setUserId(subscriptionKey.getSellerId());
-            payload.setCorrelationId(eventCorrelationId);
-            payload.setTenantId(tenantId);
+                payload.setUserId(subscriptionKey.getSellerId());
+                payload.setCorrelationId(eventCorrelationId);
+                payload.setTenantId(tenantId);
 
-            KeyUsedPayload payloadEvent =
-                    new KeyUsedPayload(payload.getKey(), true, subscriptionKey.getUsedDate());
-            MqttEvent<KeyUsedPayload> event =
-                    MqttEvent.<KeyUsedPayload>builder()
-                            .type("KeyUsed")
-                            .payload(payloadEvent)
-                            .correlationId(eventCorrelationId) // use same correlationId
-                            .version(1)
-                            .build();
+                KeyUsedPayload payloadEvent =
+                        new KeyUsedPayload(payload.getKey(), true, subscriptionKey.getUsedDate());
+                MqttEvent<KeyUsedPayload> event =
+                        MqttEvent.<KeyUsedPayload>builder()
+                                .type("KeyUsed")
+                                .payload(payloadEvent)
+                                .correlationId(eventCorrelationId) // use same correlationId
+                                .version(1)
+                                .build();
 
                 mqttService.publishAsync("user/" + subscriptionKey.getSellerId() + "/events", objectMapper.writeValueAsString(event), 1, false);
             } catch (Exception e) {
