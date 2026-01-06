@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -88,6 +89,17 @@ public class SubscriptionKeyService {
         loadPlansIfNeeded();
         return mapToResponse(lastKeys, planMap);
     }
+
+
+
+    @Transactional
+    public SubscriptionKey markKeyUsed(String key){
+        SubscriptionKey subscriptionKey =  keyRepo.findBykeyValue(key).orElseThrow(()-> new RuntimeException("Key not found"));
+        subscriptionKey.setUsed(true);
+        subscriptionKey.setUsedDate(Instant.now());
+        return subscriptionKey;
+    }
+
 
 // ──────────────── PRIVATE HELPERS ────────────────
 

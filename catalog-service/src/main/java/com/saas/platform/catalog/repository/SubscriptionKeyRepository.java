@@ -8,10 +8,12 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface SubscriptionKeyRepository extends JpaRepository<SubscriptionKey, Long> {
     List<SubscriptionKey> findTop20BySellerIdOrderByCreatedDateDesc(Long sellerId);
 
+    Optional<SubscriptionKey> findBykeyValue(String key);
     @Query(value = """
             SELECT
         SUM(p.price) AS totalGenerated,
