@@ -92,7 +92,7 @@ public class SubscriptionKeyService {
 
 
 
-    @Transactional
+    @Transactional(value = "transactionManager") // 👈 Specify the bean name
     public SubscriptionKey markKeyUsed(String key){
         SubscriptionKey subscriptionKey =  keyRepo.findBykeyValue(key).orElseThrow(()-> new RuntimeException("Key not found"));
         subscriptionKey.setUsed(true);
